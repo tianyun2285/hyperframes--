@@ -6,21 +6,21 @@ import seafoodImage from "../assets/dish-seafood.png";
 const dishes = [
   {
     title: "炭烤安格斯牛排",
-    description: "迷迭香、烟熏海盐、烤甜椒，肉汁收得干净利落。",
+    description: "外层炭香焦脆，内里柔嫩多汁，搭配迷迭香和烤甜椒。",
     price: "¥108",
     image: steakImage,
     alt: "炭烤牛排配烤蔬菜",
   },
   {
     title: "番茄罗勒手工意面",
-    description: "慢熬番茄、帕玛森和新鲜罗勒，酸甜明亮。",
+    description: "手工意面裹上慢熬番茄酱，罗勒清香与帕玛森咸香层次分明。",
     price: "¥88",
     image: pastaImage,
     alt: "番茄罗勒手工意面",
   },
   {
     title: "海港小食拼盘",
-    description: "虾、贝、香草面包糠和柠檬，适合两三人分享。",
+    description: "鲜虾与贝类现烤上桌，配香草面包糠和柠檬，清爽好分享。",
     price: "¥128",
     image: seafoodImage,
     alt: "海鲜拼盘与柠檬",
