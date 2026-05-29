@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Codex Plugin Hype Reel</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #06070d;
+      }
+
+      body {
+        font-family: "IBM Plex Mono", monospace;
+        color: #f4f7ff;
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #06070d;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #06070d;
+      }
+
+      #scene1 {
+        z-index: 1;
+      }
+
+      #scene2 {
+        z-index: 2;
+        opacity: 0;
+      }
+
+      #scene3 {
+        z-index: 3;
+        opacity: 0;
+      }
+
+      #scene4 {
+        z-index: 4;
+        opacity: 0;
+      }
+
+      #scene5 {
+        z-index: 5;
+        opacity: 0;
+      }
+
+      .bg-grid {
+        position: absolute;
+        inset: -120px;
+        opacity: 0.42;
+        background-image:
+          linear-gradient(rgba(57, 245, 255, 0.12) 1px, rgba(57, 245, 255, 0) 1px),
+          linear-gradient(90deg, rgba(255, 61, 242, 0.1) 1px, rgba(255, 61, 242, 0) 1px);
+        background-size: 96px 96px;
+        transform: perspective(900px) rotateX(58deg) translateY(120px);
+        transform-origin: center bottom;
+      }
+
+      .scanlines {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.14;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(244, 247, 255, 0.06) 0,
+          rgba(244, 247, 255, 0.06) 1px,
+          rgba(6, 7, 13, 0) 3px,
+          rgba(6, 7, 13, 0) 7px
+        );
+        mix-blend-mode: screen;
+      }
+
+      .glow {
+        position: absolute;
+        width: 760px;
+        height: 760px;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.52;
+      }
+
+      .glow.cyan {
+        background: rgba(57, 245, 255, 0.35);
+      }
+
+      .glow.magenta {
+        background: rgba(255, 61, 242, 0.31);
+      }
+
+      .glow.yellow {
+        background: rgba(247, 255, 74, 0.22);
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        padding: 96px 118px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 28px;
+      }
+
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .display {
+        font-family: "Archivo Black", sans-serif;
+        font-weight: 900;
+        line-height: 0.9;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .tag {
+        align-self: flex-start;
+        display: inline-flex;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 20px;
+        border: 1px solid rgba(57, 245, 255, 0.48);
+        background: rgba(17, 24, 39, 0.62);
+        color: #39f5ff;
+        font-size: 24px;
+        line-height: 1;
+        box-shadow: 0 0 38px rgba(57, 245, 255, 0.16);
+      }
+
+      .tag::before {
+        content: "";
+        width: 12px;
+        height: 12px;
+        background: #f7ff4a;
+        box-shadow: 0 0 22px #f7ff4a;
+      }
+
+      .hero-title {
+        max-width: 1250px;
+        font-size: 156px;
+        color: #f4f7ff;
+        text-shadow:
+          5px 0 0 rgba(255, 61, 242, 0.74),
+          -5px 0 0 rgba(57, 245, 255, 0.7),
+          0 28px 90px rgba(57, 245, 255, 0.24);
+      }
+
+      .hero-title .hot {
+        color: #f7ff4a;
+      }
+
+      .hero-sub {
+        max-width: 930px;
+        color: rgba(244, 247, 255, 0.82);
+        font-size: 36px;
+        line-height: 1.32;
+      }
+
+      .plugin-orbit {
+        position: absolute;
+        right: 110px;
+        top: 126px;
+        width: 580px;
+        height: 580px;
+        border: 1px solid rgba(57, 245, 255, 0.35);
+        border-radius: 50%;
+      }
+
+      .plugin-orbit::before,
+      .plugin-orbit::after {
+        content: "";
+        position: absolute;
+        inset: 74px;
+        border: 1px solid rgba(255, 61, 242, 0.3);
+        border-radius: 50%;
+      }
+
+      .plugin-orbit::after {
+        inset: 154px;
+        border-color: rgba(247, 255, 74, 0.34);
+      }
+
+      .orbit-pill {
+        position: absolute;
+        padding: 13px 18px;
+        background: #111827;
+        border: 1px solid rgba(244, 247, 255, 0.22);
+        color: #f4f7ff;
+        font-size: 22px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.38);
+      }
+
+      .scene-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 32px;
+      }
+
+      .scene-kicker {
+        color: #39f5ff;
+        font-size: 25px;
+        letter-spacing: 0;
+      }
+
+      .scene-title {
+        max-width: 850px;
+        font-size: 100px;
+      }
+
+      .burst-word {
+        color: #f7ff4a;
+        font-size: 62px;
+        line-height: 0.95;
+        text-align: right;
+        text-shadow: 0 0 34px rgba(247, 255, 74, 0.36);
+      }
+
+      .cards {
+        position: relative;
+        width: 100%;
+        height: 620px;
+        perspective: 1100px;
+      }
+
+      .tool-card {
+        position: absolute;
+        width: 430px;
+        min-height: 260px;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background:
+          linear-gradient(135deg, rgba(244, 247, 255, 0.13), rgba(244, 247, 255, 0.03)),
+          #111827;
+        border: 1px solid rgba(244, 247, 255, 0.18);
+        box-shadow:
+          0 38px 84px rgba(0, 0, 0, 0.44),
+          inset 0 1px 0 rgba(244, 247, 255, 0.16);
+        will-change: transform, opacity, filter;
+      }
+
+      .tool-card.big {
+        width: 520px;
+        min-height: 320px;
+      }
+
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgba(244, 247, 255, 0.64);
+        font-size: 19px;
+      }
+
+      .icon {
+        width: 72px;
+        height: 72px;
+        display: grid;
+        place-items: center;
+        color: #f4f7ff;
+        background: #0b1020;
+        border: 3px solid #39f5ff;
+        font-size: 34px;
+        font-weight: 900;
+        box-shadow: 0 0 38px rgba(57, 245, 255, 0.46);
+      }
+
+      .icon.magenta {
+        background: #0b1020;
+        border-color: #ff3df2;
+      }
+
+      .icon.yellow {
+        background: #0b1020;
+        border-color: #f7ff4a;
+      }
+
+      .card-name {
+        font-size: 40px;
+        line-height: 1.02;
+        color: #f4f7ff;
+      }
+
+      .card-action {
+        color: #39f5ff;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      .ui-window {
+        position: absolute;
+        background: #0b1020;
+        border: 1px solid rgba(57, 245, 255, 0.22);
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.52);
+        overflow: hidden;
+      }
+
+      .window-bar {
+        height: 46px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 18px;
+        border-bottom: 1px solid rgba(244, 247, 255, 0.12);
+        color: rgba(244, 247, 255, 0.62);
+        font-size: 18px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ff3df2;
+      }
+
+      .dot:nth-child(2) {
+        background: #f7ff4a;
+      }
+
+      .dot:nth-child(3) {
+        background: #39f5ff;
+      }
+
+      .code-lines {
+        padding: 20px 24px;
+        display: grid;
+        gap: 13px;
+      }
+
+      .code-line {
+        height: 15px;
+        background: rgba(244, 247, 255, 0.16);
+      }
+
+      .code-line.cyan {
+        background: rgba(57, 245, 255, 0.74);
+      }
+
+      .code-line.magenta {
+        background: rgba(255, 61, 242, 0.68);
+      }
+
+      .phone {
+        position: absolute;
+        width: 250px;
+        height: 500px;
+        padding: 18px;
+        background: #111827;
+        border: 3px solid rgba(244, 247, 255, 0.68);
+        border-radius: 38px;
+        box-shadow: 0 34px 80px rgba(0, 0, 0, 0.54);
+      }
+
+      .phone-screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 24px;
+        background:
+          radial-gradient(circle at 70% 20%, rgba(57, 245, 255, 0.45), rgba(57, 245, 255, 0) 32%),
+          linear-gradient(160deg, #0b1020, #17142b);
+        padding: 24px 18px;
+      }
+
+      .app-block {
+        height: 72px;
+        margin-bottom: 17px;
+        background: rgba(244, 247, 255, 0.13);
+        border: 1px solid rgba(244, 247, 255, 0.14);
+      }
+
+      .spreadsheet {
+        position: absolute;
+        width: 620px;
+        height: 360px;
+        background: #101829;
+        border: 1px solid rgba(57, 245, 255, 0.26);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+      }
+
+      .sheet-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+      }
+
+      .cell {
+        height: 46px;
+        border-right: 1px solid rgba(244, 247, 255, 0.12);
+        border-bottom: 1px solid rgba(244, 247, 255, 0.1);
+        padding: 13px 14px;
+        color: rgba(244, 247, 255, 0.66);
+        font-size: 16px;
+      }
+
+      .cell.hot {
+        color: #f4f7ff;
+        background: #263000;
+        font-weight: 900;
+      }
+
+      .deck {
+        position: absolute;
+        width: 470px;
+        height: 285px;
+        background: #141b2b;
+        border: 1px solid rgba(255, 61, 242, 0.36);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+        padding: 28px;
+      }
+
+      .deck-title {
+        font-size: 42px;
+        color: #f4f7ff;
+        margin-bottom: 20px;
+      }
+
+      .deck-shape {
+        width: 180px;
+        height: 110px;
+        background: #ff3df2;
+        box-shadow: 0 0 38px rgba(255, 61, 242, 0.42);
+      }
+
+      .computer {
+        position: absolute;
+        right: 140px;
+        bottom: 130px;
+        width: 710px;
+        height: 430px;
+        background: #0b1020;
+        border: 2px solid rgba(244, 247, 255, 0.24);
+        box-shadow: 0 42px 100px rgba(0, 0, 0, 0.58);
+      }
+
+      .browser-bar {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 22px;
+        border-bottom: 1px solid rgba(244, 247, 255, 0.12);
+      }
+
+      .url {
+        flex: 1;
+        padding: 11px 18px;
+        background: rgba(244, 247, 255, 0.08);
+        color: rgba(244, 247, 255, 0.76);
+        font-size: 19px;
+      }
+
+      .cursor {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 36px solid #f4f7ff;
+        border-top: 22px solid transparent;
+        border-bottom: 22px solid transparent;
+        filter: drop-shadow(0 0 20px rgba(57, 245, 255, 0.74));
+        transform: rotate(25deg);
+      }
+
+      .takeover-labels {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        max-width: 780px;
+      }
+
+      .takeover-labels span,
+      .keyword {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 18px;
+        background: rgba(244, 247, 255, 0.09);
+        border: 1px solid rgba(244, 247, 255, 0.16);
+        color: #f4f7ff;
+        font-size: 28px;
+      }
+
+      .keyword {
+        color: #06070d;
+        background: #f7ff4a;
+        border: 0;
+        font-weight: 900;
+      }
+
+      .final-content {
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 88px 110px;
+      }
+
+      .final-title {
+        max-width: 1540px;
+        font-size: 152px;
+        color: #f4f7ff;
+        text-shadow:
+          7px 0 0 rgba(57, 245, 255, 0.7),
+          -7px 0 0 rgba(255, 61, 242, 0.75),
+          0 0 70px rgba(57, 245, 255, 0.34);
+      }
+
+      .final-title .yellow {
+        color: #f7ff4a;
+      }
+
+      .final-sub {
+        font-size: 42px;
+        color: rgba(244, 247, 255, 0.88);
+      }
+
+      .flash {
+        position: absolute;
+        inset: 0;
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0;
+        background: #f4f7ff;
+      }
+
+      .slice {
+        position: absolute;
+        left: -80px;
+        width: 2080px;
+        height: 150px;
+        z-index: 45;
+        opacity: 0;
+        background: #39f5ff;
+        box-shadow: 0 0 36px rgba(57, 245, 255, 0.6);
+        transform: skewY(-6deg);
+      }
+
+      .slice.magenta {
+        background: #ff3df2;
+        box-shadow: 0 0 36px rgba(255, 61, 242, 0.6);
+      }
+
+      .slice.yellow {
+        background: #f7ff4a;
+        box-shadow: 0 0 36px rgba(247, 255, 74, 0.6);
+      }
+
+      .noise-word {
+        position: absolute;
+        z-index: 1;
+        font-size: 168px;
+        white-space: nowrap;
+      }
+
+      .noise-word::before {
+        content: attr(data-word);
+        color: rgba(244, 247, 255, 0.055);
+      }
+
+      .meter {
+        position: absolute;
+        display: flex;
+        align-items: end;
+        gap: 8px;
+        height: 160px;
+      }
+
+      .bar {
+        width: 15px;
+        background: #39f5ff;
+        box-shadow: 0 0 22px rgba(57, 245, 255, 0.44);
+      }
+    </style>
+  </head>
+  <body>
+      <div
+      id="root"
+      data-composition-id="codex-plugin-hype"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="10"
+      data-track-index="0"
+    >
+      <div id="scene1" class="scene">
+        <div class="bg-grid" data-layout-ignore></div>
+        <div class="glow cyan" data-layout-ignore style="left: -160px; top: -130px"></div>
+        <div class="glow magenta" data-layout-ignore style="right: -150px; bottom: -170px"></div>
+        <div class="scanlines" data-layout-ignore></div>
+        <div class="noise-word display" data-layout-ignore aria-hidden="true" data-word="PLUGINS" style="left: 700px; top: 770px"></div>
+        <div class="scene-content">
+          <div class="tag mono">CODEX PLUGIN STACK / 10 SEC DROP</div>
+          <div class="hero-title display">Codex <span class="hot">超强</span> 插件盘点</div>
+          <div class="hero-sub mono">视频、动画、产品、网站、App、表格、PPT、电脑接管、浏览器控制，一次点燃。</div>
+        </div>
+        <div class="plugin-orbit" data-layout-allow-overflow>
+          <div class="orbit-pill mono" style="left: 214px; top: -28px">HyperFrames</div>
+          <div class="orbit-pill mono" style="right: -54px; top: 168px">Browser Use</div>
+          <div class="orbit-pill mono" style="left: 54px; bottom: 20px">Computer Use</div>
+        </div>
+      </div>
+
+      <div id="scene2" class="scene">
+        <div class="bg-grid" data-layout-ignore></div>
+        <div class="glow cyan" data-layout-ignore style="right: 80px; top: 40px"></div>
+        <div class="glow yellow" data-layout-ignore style="left: 70px; bottom: -190px"></div>
+        <div class="scanlines" data-layout-ignore></div>
+        <div class="noise-word display" data-layout-ignore aria-hidden="true" data-word="CREATE" style="left: 820px; top: 46px"></div>
+        <div class="scene-content">
+          <div class="scene-head">
+            <div>
+              <div class="scene-kicker mono">01 / VIDEO + MOTION ENGINE</div>
+              <div class="scene-title display">做视频 做动画</div>
+            </div>
+            <div class="burst-word display">画面<br />直接炸场</div>
+          </div>
+          <div class="cards">
+            <div class="tool-card big" id="card-hyper" style="left: 48px; top: 60px; transform: rotateY(-8deg) rotateZ(-2deg)">
+              <div class="card-top mono"><span>VIDEO ENGINE</span><span>00:01.9</span></div>
+              <div class="icon">H</div>
+              <div>
+                <div class="card-name display">HyperFrames</div>
+                <div class="card-action mono">HTML timeline -> cinematic render</div>
+              </div>
+            </div>
+            <div class="tool-card" id="card-remotion" style="left: 590px; top: 228px; transform: rotateY(10deg) rotateZ(3deg)">
+              <div class="card-top mono"><span>REACT MOTION</span><span>60 FPS</span></div>
+              <div class="icon magenta">R</div>
+              <div>
+                <div class="card-name display">Remotion</div>
+                <div class="card-action mono">code-driven animation</div>
+              </div>
+            </div>
+            <div class="tool-card" id="card-figma" style="right: 120px; top: 70px; transform: rotateY(-12deg) rotateZ(2deg)">
+              <div class="card-top mono"><span>DESIGN SOURCE</span><span>UI FLOW</span></div>
+              <div class="icon yellow">F</div>
+              <div>
+                <div class="card-name display">Figma</div>
+                <div class="card-action mono">frames into production taste</div>
+              </div>
+            </div>
+            <div class="meter" style="right: 268px; bottom: 70px">
+              <div class="bar" style="height: 70px"></div>
+              <div class="bar" style="height: 118px"></div>
+              <div class="bar" style="height: 92px"></div>
+              <div class="bar" style="height: 150px"></div>
+              <div class="bar" style="height: 105px"></div>
+              <div class="bar" style="height: 136px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene3" class="scene">
+        <div class="bg-grid" data-layout-ignore></div>
+        <div class="glow magenta" data-layout-ignore style="left: -150px; top: 60px"></div>
+        <div class="glow cyan" data-layout-ignore style="right: -70px; bottom: -120px"></div>
+        <div class="scanlines" data-layout-ignore></div>
+        <div class="noise-word display" data-layout-ignore aria-hidden="true" data-word="PRODUCT" style="left: 80px; top: 750px"></div>
+        <div class="scene-content">
+          <div class="scene-head">
+            <div>
+              <div class="scene-kicker mono">02 / PRODUCT BUILDER BURST</div>
+              <div class="scene-title display">做产品 做网站 做 App</div>
+            </div>
+            <div class="burst-word display">从想法<br />到界面</div>
+          </div>
+          <div class="cards">
+            <div class="ui-window" id="web-window" style="left: 70px; top: 96px; width: 720px; height: 430px">
+              <div class="window-bar mono"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Build Web Apps</div>
+              <div class="code-lines">
+                <div class="code-line cyan" style="width: 86%"></div>
+                <div class="code-line" style="width: 64%"></div>
+                <div class="code-line magenta" style="width: 78%"></div>
+                <div class="code-line" style="width: 52%"></div>
+                <div class="code-line cyan" style="width: 71%"></div>
+                <div class="code-line" style="width: 94%"></div>
+              </div>
+            </div>
+            <div class="phone" id="ios-phone" style="left: 855px; top: 28px; transform: rotateZ(-8deg)">
+              <div class="phone-screen">
+                <div class="app-block"></div>
+                <div class="app-block" style="width: 72%"></div>
+                <div class="app-block" style="width: 88%; background: rgba(57, 245, 255, 0.25)"></div>
+              </div>
+            </div>
+            <div class="phone" id="android-phone" style="right: 170px; top: 88px; transform: rotateZ(8deg)">
+              <div class="phone-screen">
+                <div class="app-block" style="background: rgba(247, 255, 74, 0.24)"></div>
+                <div class="app-block" style="width: 80%"></div>
+                <div class="app-block" style="width: 92%; background: rgba(255, 61, 242, 0.2)"></div>
+              </div>
+            </div>
+            <div class="keyword mono" id="kw-web" style="position: absolute; left: 92px; bottom: 42px">Build Web Apps</div>
+            <div class="keyword mono" id="kw-ios" style="position: absolute; left: 830px; bottom: 82px">Build iOS Apps</div>
+            <div class="keyword mono" id="kw-android" style="position: absolute; right: 130px; bottom: 38px">Test Android Apps</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene4" class="scene">
+        <div class="bg-grid" data-layout-ignore></div>
+        <div class="glow yellow" data-layout-ignore style="right: -80px; top: -170px"></div>
+        <div class="glow cyan" data-layout-ignore style="left: -150px; bottom: -150px"></div>
+        <div class="scanlines" data-layout-ignore></div>
+        <div class="noise-word display" data-layout-ignore aria-hidden="true" data-word="CONTROL" style="left: 950px; top: 720px"></div>
+        <div class="scene-content">
+          <div class="scene-head">
+            <div>
+              <div class="scene-kicker mono">03 / OFFICE + COMPUTER AGENTS</div>
+              <div class="scene-title display">做表格 做 PPT 接管电脑 控浏览器</div>
+            </div>
+            <div class="burst-word display">效率<br />暴击</div>
+          </div>
+          <div class="cards">
+            <div class="spreadsheet" id="sheet" style="left: 20px; top: 95px">
+              <div class="sheet-row">
+                <div class="cell hot">Spreadsheets</div>
+                <div class="cell">Revenue</div>
+                <div class="cell">Growth</div>
+                <div class="cell">Auto</div>
+              </div>
+              <div class="sheet-row">
+                <div class="cell">Q1</div>
+                <div class="cell">$42K</div>
+                <div class="cell">+38%</div>
+                <div class="cell">OK</div>
+              </div>
+              <div class="sheet-row">
+                <div class="cell">Q2</div>
+                <div class="cell">$71K</div>
+                <div class="cell hot">+69%</div>
+                <div class="cell">RUN</div>
+              </div>
+              <div class="sheet-row">
+                <div class="cell">Q3</div>
+                <div class="cell">$126K</div>
+                <div class="cell">+77%</div>
+                <div class="cell hot">DONE</div>
+              </div>
+            </div>
+            <div class="deck" id="deck" style="left: 540px; top: 300px; transform: rotateZ(-5deg)">
+              <div class="deck-title display">Presentations</div>
+              <div class="deck-shape"></div>
+            </div>
+            <div class="computer" id="computer">
+              <div class="browser-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <div class="url mono">browser.use / computer.takeover / execute</div>
+              </div>
+              <div class="code-lines">
+                <div class="code-line cyan" style="width: 92%"></div>
+                <div class="code-line" style="width: 76%"></div>
+                <div class="code-line magenta" style="width: 84%"></div>
+                <div class="code-line" style="width: 58%"></div>
+                <div class="code-line cyan" style="width: 66%"></div>
+              </div>
+              <div class="cursor" id="cursor" style="left: 410px; top: 214px"></div>
+            </div>
+            <div class="takeover-labels" style="position: absolute; left: 20px; bottom: 18px">
+              <span class="mono">Computer Use</span>
+              <span class="mono">Browser Use</span>
+              <span class="mono">接管电脑</span>
+              <span class="mono">控浏览器</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene5" class="scene">
+        <div class="bg-grid" data-layout-ignore></div>
+        <div class="glow cyan" data-layout-ignore style="left: 50%; top: 50%; transform: translate(-50%, -50%)"></div>
+        <div class="glow magenta" data-layout-ignore style="left: 180px; top: 110px"></div>
+        <div class="glow yellow" data-layout-ignore style="right: 110px; bottom: 30px"></div>
+        <div class="scanlines" data-layout-ignore></div>
+        <div class="scene-content final-content">
+          <div class="tag mono">CODEX PLUGINS / READY TO LAUNCH</div>
+          <div class="final-title display">看就想<span class="yellow">立刻试</span></div>
+          <div class="final-sub mono">把灵感、界面、数据和浏览器动作，全都推到加速档。</div>
+        </div>
+      </div>
+
+      <div class="slice" style="top: 70px"></div>
+      <div class="slice magenta" style="top: 438px"></div>
+      <div class="slice yellow" style="top: 796px"></div>
+      <div class="flash"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      gsap.defaults({ overwrite: "auto" });
+
+      function ambient(scene) {
+        tl.to(scene + " .bg-grid", { y: -58, duration: 10, ease: "none" }, 0);
+        tl.to(scene + " .scanlines", { y: 42, duration: 10, ease: "none" }, 0);
+        tl.to(scene + " .glow", { scale: 1.1, duration: 2, yoyo: true, repeat: 4, ease: "sine.inOut" }, 0);
+      }
+
+      ["#scene1", "#scene2", "#scene3", "#scene4", "#scene5"].forEach(ambient);
+
+      function enterScene(scene, start) {
+        if (scene !== "#scene1") {
+          tl.set(scene, { opacity: 1 }, start);
+        }
+      }
+
+      function glitchTransition(fromScene, toScene, start) {
+        enterScene(toScene, start + 0.08);
+        tl.set(toScene, { scale: 1.08, filter: "brightness(1.8) saturate(1.4)" }, start);
+        tl.fromTo(".slice", { xPercent: -112, opacity: 0.94 }, { xPercent: 112, opacity: 0.98, duration: 0.2, stagger: 0.025, ease: "power4.inOut" }, start + 0.02);
+        tl.to(fromScene, { x: -52, filter: "brightness(1.7) contrast(1.4)", duration: 0.14, ease: "power4.in" }, start + 0.03);
+        tl.to(fromScene, { opacity: 0, scale: 1.16, duration: 0.09, ease: "expo.in" }, start + 0.17);
+        tl.to(toScene, { scale: 1, filter: "brightness(1) saturate(1)", duration: 0.28, ease: "expo.out" }, start + 0.12);
+      }
+
+      function sceneOne() {
+        tl.from("#scene1 .tag", { x: -90, opacity: 0, duration: 0.34, ease: "power4.out" }, 0.14);
+        tl.from("#scene1 .hero-title", { scale: 1.24, y: 70, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.22);
+        tl.from("#scene1 .hero-sub", { x: 80, opacity: 0, duration: 0.38, ease: "circ.out" }, 0.5);
+        tl.from("#scene1 .plugin-orbit", { scale: 0.72, opacity: 0, duration: 0.42, ease: "back.out(1.8)" }, 0.38);
+        tl.from("#scene1 .orbit-pill", { y: 42, opacity: 0, scale: 0.7, duration: 0.24, stagger: 0.055, ease: "power3.out" }, 0.68);
+        tl.to("#scene1 .plugin-orbit", { rotation: 18, duration: 1.4, ease: "none" }, 0.62);
+      }
+
+      function sceneTwo() {
+        tl.from("#scene2 .scene-kicker", { x: -80, opacity: 0, duration: 0.28, ease: "power4.out" }, 1.96);
+        tl.from("#scene2 .scene-title", { y: 70, opacity: 0, skewX: -10, duration: 0.42, ease: "expo.out" }, 2.02);
+        tl.from("#scene2 .burst-word", { scale: 0.72, rotation: 4, opacity: 0, duration: 0.32, ease: "back.out(2.4)" }, 2.12);
+        tl.from("#card-hyper", { x: -180, z: -320, rotationY: -34, opacity: 0, filter: "blur(10px)", duration: 0.42, ease: "power4.out" }, 2.18);
+        tl.from("#card-remotion", { y: 160, z: -260, rotationY: 34, opacity: 0, duration: 0.34, ease: "circ.out" }, 2.33);
+        tl.from("#card-figma", { x: 210, z: -220, rotation: 12, opacity: 0, duration: 0.36, ease: "expo.out" }, 2.45);
+        tl.from("#scene2 .bar", { scaleY: 0.08, transformOrigin: "bottom", opacity: 0, duration: 0.25, stagger: 0.035, ease: "power3.out" }, 2.58);
+        tl.to("#scene2 .tool-card", { y: -18, duration: 0.45, yoyo: true, repeat: 1, stagger: 0.04, ease: "sine.inOut" }, 2.74);
+      }
+
+      function sceneThree() {
+        tl.from("#scene3 .scene-kicker", { x: 88, opacity: 0, duration: 0.26, ease: "power3.out" }, 3.8);
+        tl.from("#scene3 .scene-title", { scale: 0.82, opacity: 0, duration: 0.36, ease: "back.out(1.9)" }, 3.86);
+        tl.from("#scene3 .burst-word", { x: 120, opacity: 0, rotation: -6, duration: 0.31, ease: "expo.out" }, 3.98);
+        tl.from("#web-window", { x: -230, y: 70, opacity: 0, rotationY: -28, duration: 0.38, ease: "power4.out" }, 4.08);
+        tl.from("#ios-phone", { y: -170, scale: 0.78, opacity: 0, rotation: -22, duration: 0.38, ease: "circ.out" }, 4.24);
+        tl.from("#android-phone", { x: 210, scale: 0.82, opacity: 0, rotation: 24, duration: 0.34, ease: "expo.out" }, 4.37);
+        tl.from("#scene3 .keyword", { y: 52, opacity: 0, scale: 0.84, duration: 0.2, stagger: 0.055, ease: "back.out(2.2)" }, 4.55);
+        tl.from("#scene3 .code-line", { scaleX: 0.08, transformOrigin: "left", duration: 0.22, stagger: 0.025, ease: "power2.out" }, 4.62);
+      }
+
+      function sceneFour() {
+        tl.from("#scene4 .scene-kicker", { y: -54, opacity: 0, duration: 0.26, ease: "power4.out" }, 5.68);
+        tl.from("#scene4 .scene-title", { x: -100, opacity: 0, duration: 0.42, ease: "expo.out" }, 5.75);
+        tl.from("#scene4 .burst-word", { y: 80, opacity: 0, scale: 0.76, duration: 0.32, ease: "back.out(2.0)" }, 5.9);
+        tl.from("#sheet", { x: -210, z: -180, opacity: 0, rotation: -8, duration: 0.35, ease: "circ.out" }, 6.02);
+        tl.from("#deck", { y: 170, opacity: 0, rotation: -20, duration: 0.34, ease: "power3.out" }, 6.18);
+        tl.from("#computer", { x: 250, opacity: 0, scale: 0.86, duration: 0.42, ease: "expo.out" }, 6.24);
+        tl.from("#scene4 .takeover-labels span", { y: 42, opacity: 0, duration: 0.2, stagger: 0.045, ease: "back.out(2.6)" }, 6.5);
+        tl.from("#cursor", { x: -260, y: -110, opacity: 0, duration: 0.3, ease: "power4.out" }, 6.56);
+        tl.to("#cursor", { x: 70, y: 42, duration: 0.42, ease: "power2.inOut" }, 6.9);
+      }
+
+      function sceneFive() {
+        tl.from("#scene5 .tag", { y: -80, opacity: 0, duration: 0.32, ease: "power4.out" }, 7.68);
+        tl.from("#scene5 .final-title", { scale: 1.34, opacity: 0, filter: "blur(12px)", duration: 0.5, ease: "expo.out" }, 7.8);
+        tl.from("#scene5 .final-sub", { y: 60, opacity: 0, duration: 0.34, ease: "circ.out" }, 8.16);
+        tl.to("#scene5 .final-title", { scale: 1.035, duration: 0.18, yoyo: true, repeat: 3, ease: "power4.inOut" }, 8.48);
+        tl.to(".flash", { opacity: 0.5, duration: 0.055, ease: "expo.out" }, 9.46);
+        tl.to(".flash", { opacity: 0, duration: 0.18, ease: "power2.out" }, 9.52);
+        tl.to("#scene5 .final-content", { opacity: 0, scale: 0.96, duration: 0.34, ease: "power2.in" }, 9.68);
+      }
+
+      sceneOne();
+      glitchTransition("#scene1", "#scene2", 1.68);
+      sceneTwo();
+      glitchTransition("#scene2", "#scene3", 3.5);
+      sceneThree();
+      glitchTransition("#scene3", "#scene4", 5.42);
+      sceneFour();
+      glitchTransition("#scene4", "#scene5", 7.42);
+      sceneFive();
+
+      window.__timelines["codex-plugin-hype"] = tl;
+    </script>
+  </body>
+</html>

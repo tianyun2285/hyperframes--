@@ -29,3 +29,12 @@ coverage/
 
 # Vite
 .vite/
+
+# HyperFrames / rendered media
+.hyperframes/
+codex-plugin-video/.hyperframes/
+codex-plugin-video/capture/
+codex-plugin-video/renders/
+codex-plugin-video/*.mp4
+codex-plugin-video/*.webm
+codex-plugin-video/*.mov
